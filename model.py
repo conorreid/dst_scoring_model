@@ -4,40 +4,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 import scipy.stats as stats
 import pandas as pd
-
-the_maps = {'Arizona': 'Arizona Cardinals',
-			'Atlanta': 'Atlanta Falcons',
-			'Baltimore': 'Baltimore Ravens',
-			'Buffalo': 'Buffalo Bills',
-			'Carolina': 'Carolina Panthers',
-			'Chicago': 'Chicago Bears',
-			'Cincinnati': 'Cincinnati Bengals',
-			'Cleveland': 'Cleveland Browns',
-			'Dallas': 'Dallas Cowboys',
-			'Denver': 'Denver Broncos',
-			'Detroit': 'Detroit Lions',
-			'Green Bay': 'Green Bay Packers',
-			'Houston': 'Houston Texans',
-			'Indianapolis': 'Indianapolis Colts',
-			'Jacksonville': 'Jacksonville Jaguars',
-			'Kansas City': 'Kansas City Chiefs',
-			'LA Chargers': 'Los Angeles Chargers',
-			'LA Rams': 'Los Angeles Rams',
-			'Miami': 'Miami Dolphins',
-			'Minnesota': 'Minnesota Vikings',
-			'New England': 'New England Patriots',
-			'New Orleans': 'New Orleans Saints',
-			'NY Giants': 'New York Giants',
-			'NY Jets': 'New York Jets',
-			'Oakland': 'Oakland Raiders',
-			'Philadelphia': 'Philadelphia Eagles',
-			'Pittsburgh': 'Pittsburgh Steelers',
-			'San Francisco': 'San Francisco 49ers',
-			'Seattle': 'Seattle Seahawks',
-			'Tampa Bay': 'Tampa Bay Buccaneers',
-			'Tennessee': 'Tennessee Titans',
-			'Washington': 'Washington Redskins'}
-
+import maps
 
 def get_tr_stats(url, stat_name):
 	sacks_defense = requests.get(url)
@@ -50,7 +17,7 @@ def get_tr_stats(url, stat_name):
 								   stat_name + '_season': float(tds[2].text),
 								   stat_name + '_last_3': float(tds[3].text)})
 	sacks_defense_list = pd.DataFrame(data=sacks_defense_list)
-	sacks_defense_list['team_name'] = sacks_defense_list['team_name'].map(the_maps)
+	sacks_defense_list['team_name'] = sacks_defense_list['team_name'].map(maps.town_to_team)
 	sacks_defense_list[stat_name] = sacks_defense_list[stat_name + '_season'] * 0.5 + sacks_defense_list[stat_name + '_last_3'] * 0.5
 	sacks_defense_list = sacks_defense_list.drop([stat_name + '_season', stat_name + '_last_3'], axis=1)
 	return sacks_defense_list
