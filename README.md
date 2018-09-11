@@ -1,4 +1,4 @@
-#D/ST scoring model
+# D/ST scoring model
 
 ### Summary
 This is D/ST fantasy football scoring model, using a model framework loosely 
