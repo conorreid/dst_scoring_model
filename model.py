@@ -102,13 +102,14 @@ def poisson_create(rate, max_possible):
         rate (float): the rate at which the event in question occurs on average
         max_possible (float): the max possible number of times event can occur
     Returns:
-        (float): the sum of all the predicted events and their rates
+        event_pred (float): the sum of all the predicted events and their rates
     """
     n = np.arange(0, max_possible)
     n2 = np.arange(0, max_possible)
     y = stats.poisson.pmf(n, rate)
     y2 = n2 * y
-    return y2.sum()
+    event_pred = y2.sum()
+    return event_pred
 
 
 def points_allowed_score(points):
@@ -142,7 +143,7 @@ def main():
     sacks_defense_list = get_tr_stats(
         'https://www.teamrankings.com/nfl/stat/sacks-per-game', 'sacks_created')
     sacks_offense_list = get_tr_stats(
-        'https://www.teamrankings.com/nfl/stat/qb-sacked-per-game', 
+        'https://www.teamrankings.com/nfl/stat/qb-sacked-per-game',
         'sacks_thrown')
     interceptions_thrown = get_tr_stats(
         'https://www.teamrankings.com/nfl/stat/interceptions-thrown-per-game',
