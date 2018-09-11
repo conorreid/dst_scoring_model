@@ -82,7 +82,7 @@ def get_lines():
 
 def defense_opponent_fusion(df, stat):
     """Create the composite number for each stat, fusing offense and defense.
-    
+   
     Args:
         df (pandas.Dataframe): df of the full table
         stat (string): stat to fuse
