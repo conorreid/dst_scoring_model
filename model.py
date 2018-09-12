@@ -15,6 +15,7 @@ def get_tr_stats(url, stat_name):
     dataframe.
 
     Args:
+        stat_name (string): the stat name in question
         url (string): url of the site to scrape
     Returns:
         tr_df (pandas.Dataframe): dataframe of specified stat per team
@@ -37,6 +38,25 @@ def get_tr_stats(url, stat_name):
     return construct_tr_df(queried_stat_list, stat_name)
 
 
+def get_tr_stats_full(url, stat_name):
+    """Calls out to URL for both 2017 and 2018 stats, fuses dfs, and returns
+    a dataframe.
+
+    Args:
+        url (string): url of the site to scrape
+        stat_name (string): the stat name in question
+    Returns:
+        tr_df (pandas.Dataframe): dataframe of specified stat per team
+    """
+    df1 = get_tr_stats(url, stat_name + '2018')
+    df2 = get_tr_stats(url + '?date=2018-02-05', stat_name + '2017')
+    df_merge = pd.merge(df1, df2, how='left', on='team_name')
+    df_merge[stat_name] = df_merge[stat_name + '2017_season'] * 0.5 + \
+        df_merge[stat_name + '2018_last_3'] * 0.5
+    df_merge = df_merge[['team_name', stat_name]]
+    return df_merge
+
+
 def construct_tr_df(tr_list, stat_name):
     """Takes in the list of dictionaries, converts to a dataframe, and then
     maps town_to_team dict as well as computes average of last season and last
@@ -50,9 +70,6 @@ def construct_tr_df(tr_list, stat_name):
     """
     tr_df = pd.DataFrame(data=tr_list)
     tr_df['team_name'] = tr_df['team_name'].map(maps.town_to_team)
-    tr_df[stat_name] = tr_df[stat_name + '_season'] * 0.5 + \
-        tr_df[stat_name + '_last_3'] * 0.5
-    tr_df = tr_df.drop([stat_name + '_season', stat_name + '_last_3'], axis=1)
     return tr_df
 
 
@@ -140,24 +157,24 @@ def points_allowed_score(points):
 
 def main():
     spreads = get_lines()
-    sacks_defense_list = get_tr_stats(
+    sacks_defense_list = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/sacks-per-game', 'sacks_created')
-    sacks_offense_list = get_tr_stats(
+    sacks_offense_list = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/qb-sacked-per-game',
         'sacks_thrown')
-    interceptions_thrown = get_tr_stats(
+    interceptions_thrown = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/interceptions-thrown-per-game',
         'interceptions_thrown')
-    interceptions_created = get_tr_stats(
+    interceptions_created = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/interceptions-per-game',
         'interceptions_created')
-    fumbles_thrown = get_tr_stats(
+    fumbles_thrown = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/fumbles-per-game',
         'fumbles_thrown')
-    fumbles_created = get_tr_stats(
+    fumbles_created = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/opponent-fumbles-per-game',
         'fumbles_created')
-    defensive_touchdowns = get_tr_stats(
+    defensive_touchdowns = get_tr_stats_full(
         'https://www.teamrankings.com/nfl/stat/defensive-touchdowns-per-game',
         'defensive_touchdowns')
 
