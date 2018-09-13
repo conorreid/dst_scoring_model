@@ -4,3 +4,4 @@ __pycache__/maps.cpython-35.pyc
 .vscode/settings.json
 .pytest_cache/v/cache/nodeids
 .pytest_cache/README.md
+.vscode/launch.json
