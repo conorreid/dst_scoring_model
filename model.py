@@ -218,6 +218,11 @@ def main():
         fused_df['interceptions'] * 2 + fused_df['sacks'] * 1 + \
         fused_df['fumbles'] * 2 + fused_df['defensive_touchdowns'] * 6
     fused_df = fused_df.drop('team_name_y', axis=1)
+    fused_df['team_name'] = fused_df['team_name_x']
+    fused_df = fused_df[['team_name', 'final', 'opponent',
+                         'points_allowed_score', 'interceptions',
+                         'fumbles', 'sacks', 'defensive_touchdowns']]
+    fused_df.sort_values(by='final', ascending=False, inplace=True)
     fused_df.to_csv('/home/conor/Documents/dst_scoring_model/df_final.csv')
 
 
