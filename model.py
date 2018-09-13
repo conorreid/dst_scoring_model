@@ -1,4 +1,5 @@
 import json
+import logging
 
 from bs4 import BeautifulSoup
 import numpy as np
@@ -11,7 +12,7 @@ import maps
 
 def get_tr_stats(url, stat_name):
     """Calls out to the URL specified at teamrankings.com, finds the table using
-    BeautifulSoup, then sends table to construct_tr_df to make and return the 
+    BeautifulSoup, then sends table to construct_tr_df to make and return the
     dataframe.
 
     Args:
@@ -20,6 +21,7 @@ def get_tr_stats(url, stat_name):
     Returns:
         tr_df (pandas.Dataframe): dataframe of specified stat per team
     """
+    logging.info('getting teamrankings stats for ' + stat_name)
     queried_stat = requests.get(url)
     queried_stat_html = BeautifulSoup(queried_stat.text, 'html.parser')
     table = queried_stat_html.find('table',
@@ -79,16 +81,17 @@ def get_lines():
     Returns:
         spread_df (pandas.Dataframe): df of the lines
     """
+    logging.info('getting lines from Pinnacle')
     response = requests.get('https://therundown.io/api/v1/sports/2/events')
     events_list = json.loads(response.content.decode('utf-8'))
     spread_list = []
     for event in events_list['events']:
-        spread_list.extend([{'team_name': event['teams'][0]['name'], 
+        spread_list.extend([{'team_name': event['teams'][0]['name'],
                              'points_allowed': event['lines']['3']
                              ['total']['total_under']/2 + (-1) *
                              event['lines']['3']['spread']['point_spread_home'],
                              'opponent': event['teams'][1]['name']},
-                            {'team_name': event['teams'][1]['name'], 
+                            {'team_name': event['teams'][1]['name'],
                              'points_allowed': event['lines']['3']
                              ['total']['total_under']/2 +
                              event['lines']['3']['spread']['point_spread_home'],
@@ -99,13 +102,14 @@ def get_lines():
 
 def defense_opponent_fusion(df, stat):
     """Create the composite number for each stat, fusing offense and defense.
-  
+
     Args:
         df (pandas.Dataframe): df of the full table
         stat (string): stat to fuse
     Return:s
         df (pandas.Dataframe): df with new/dropped column(s)
     """
+    logging.info('fusing stats for ' + stat)
     df[stat] = df[stat + '_created'] * 0.45 + df[stat + '_thrown'] * 0.55
     df = df.drop([stat + '_created', stat + '_thrown'], axis=1)
     return df
@@ -214,15 +218,18 @@ def main():
     fused_df = defense_opponent_fusion(fused_df, 'sacks')
     fused_df['points_allowed_score'] = fused_df['points_allowed'].apply(
         lambda row: points_allowed_score(row))
+    logging.info('creating final score output')
     fused_df['final'] = fused_df['points_allowed_score'] + \
         fused_df['interceptions'] * 2 + fused_df['sacks'] * 1 + \
         fused_df['fumbles'] * 2 + fused_df['defensive_touchdowns'] * 6
+    logging.info('formatting df')
     fused_df = fused_df.drop('team_name_y', axis=1)
     fused_df['team_name'] = fused_df['team_name_x']
     fused_df = fused_df[['team_name', 'final', 'opponent',
                          'points_allowed_score', 'interceptions',
                          'fumbles', 'sacks', 'defensive_touchdowns']]
     fused_df.sort_values(by='final', ascending=False, inplace=True)
+    logging.info('creating csv')
     fused_df.to_csv('/home/conor/Documents/dst_scoring_model/df_final.csv',
                     index=False)
 
