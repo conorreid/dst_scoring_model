@@ -10,7 +10,7 @@ import scipy.stats as stats
 import maps
 
 
-def get_tr_stats(url, stat_name):
+def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
     """Calls out to the URL specified at teamrankings.com, finds the table using
     BeautifulSoup, then sends table to construct_tr_df to make and return the
     dataframe.
@@ -40,7 +40,7 @@ def get_tr_stats(url, stat_name):
     return construct_tr_df(queried_stat_list, stat_name)
 
 
-def get_tr_stats_full(url, stat_name):
+def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
     """Calls out to URL for both 2017 and 2018 stats, fuses dfs, and returns
     a dataframe.
 
@@ -59,7 +59,7 @@ def get_tr_stats_full(url, stat_name):
     return df_merge
 
 
-def construct_tr_df(tr_list, stat_name):
+def construct_tr_df(tr_list: list, stat_name: str) -> pd.DataFrame:
     """Takes in the list of dictionaries, converts to a dataframe, and then
     maps town_to_team dict as well as computes average of last season and last
     3 games score.
@@ -75,7 +75,7 @@ def construct_tr_df(tr_list, stat_name):
     return tr_df
 
 
-def get_lines():
+def get_lines() -> pd.DataFrame:
     """Calls out to rundown API to get Pinnacle betting lines.
 
     Returns:
@@ -100,7 +100,7 @@ def get_lines():
     return spread_df
 
 
-def defense_opponent_fusion(df, stat):
+def defense_opponent_fusion(df: pd.DataFrame, stat: str) -> pd.DataFrame:
     """Create the composite number for each stat, fusing offense and defense.
 
     Args:
@@ -115,7 +115,7 @@ def defense_opponent_fusion(df, stat):
     return df
 
 
-def poisson_create(rate, max_possible):
+def poisson_create(rate: float, max_possible: float) -> float:
     """Creates poisson distribution by making possibility matrix of values and
     then adding together matrix to find predicted value of event.
 
@@ -133,7 +133,7 @@ def poisson_create(rate, max_possible):
     return event_pred
 
 
-def points_allowed_score(points):
+def points_allowed_score(points: float) -> int:
     """The points allowed score logic generator based on standard D/ST fantasy
     football scoring.
 
