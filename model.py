@@ -162,45 +162,34 @@ def points_allowed_score(points: float) -> int:
 def main():
     spreads = get_lines()
     tr_items = {}
+    defense_pure_df = pd.DataFrame()
     for key, value in maps.tr_stat_list.items():
         tr_items[key] = get_tr_stats_full(value['url'], value['column_name'])
-    defense_pure_df = pd.merge(spreads, tr_items['sacks_defense_list'],
-                               how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, 
-                               tr_items['interceptions_created'],
-                               how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, tr_items['fumbles_created'],
-                               how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, 
-                               tr_items['defensive_touchdowns'],
-                               how='left', on='team_name')
+
+    defense_pure_df = (pd.merge(spreads, tr_items['sacks_defense_list'],
+                       how='left', on='team_name'))
+
+    for item in maps.defense_pure_list:
+        defense_pure_df = pd.merge(defense_pure_df, 
+                                   tr_items[item],
+                                   how='left', on='team_name')
+
     opponent_pure_df = pd.merge(tr_items['sacks_offense_list'],
                                 tr_items['interceptions_thrown'],
                                 how='left', on='team_name')
     opponent_pure_df = pd.merge(opponent_pure_df, tr_items['fumbles_thrown'],
                                 how='left', on='team_name')
+
     fused_df = pd.merge(defense_pure_df, opponent_pure_df, how='left',
                         left_on='opponent', right_on='team_name')
 
-    fused_df['points_allowed'] = fused_df['points_allowed'].apply(
-        lambda row: poisson_create(row, 50))
-    fused_df['sacks_created'] = fused_df['sacks_created'].apply(
-        lambda row: poisson_create(row, 7))
-    fused_df['interceptions_created'] = fused_df['interceptions_created'].apply(
-        lambda row: poisson_create(row, 7))
-    fused_df['fumbles_created'] = fused_df['fumbles_created'].apply(
-        lambda row: poisson_create(row, 5))
-    fused_df['defensive_touchdowns'] = fused_df['defensive_touchdowns'].apply(
-        lambda row: poisson_create(row, 4))
-    fused_df['sacks_thrown'] = fused_df['sacks_created'].apply(
-        lambda row: poisson_create(row, 7))
-    fused_df['interceptions_thrown'] = fused_df['interceptions_created'].apply(
-        lambda row: poisson_create(row, 7))
-    fused_df['fumbles_thrown'] = fused_df['fumbles_created'].apply(
-        lambda row: poisson_create(row, 5))
-    fused_df = defense_opponent_fusion(fused_df, 'fumbles')
-    fused_df = defense_opponent_fusion(fused_df, 'interceptions')
-    fused_df = defense_opponent_fusion(fused_df, 'sacks')
+    for key, value in maps.poisson_events.items():
+        fused_df[key] = fused_df[key].apply(lambda row: poisson_create(row, 
+                                                                       value))
+    
+    for item in maps.defense_opponent_list:
+        fused_df = defense_opponent_fusion(fused_df, item)
+
     fused_df['points_allowed_score'] = fused_df['points_allowed'].apply(
         lambda row: points_allowed_score(row))
     logging.info('creating final score output')

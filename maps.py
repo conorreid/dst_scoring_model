@@ -45,3 +45,14 @@ tr_stat_list = {'sacks_defense_list': {'url': 'https://www.teamrankings.com/nfl/
                                     'column_name': 'fumbles_created'},
                 'defensive_touchdowns': {'url': 'https://www.teamrankings.com/nfl/stat/defensive-touchdowns-per-game',
                                          'column_name': 'defensive_touchdowns'}}
+
+defense_pure_list = ['interceptions_created',
+                     'fumbles_created',
+                     'defensive_touchdowns']
+
+poisson_events = {'points_allowed': 50, 'sacks_created': 7,
+                  'interceptions_created': 7, 'fumbles_created': 5,
+                  'defensive_touchdowns': 4, 'sacks_thrown': 7,
+                  'interceptions_thrown': 7, 'fumbles_thrown': 5}
+
+defense_opponent_list = ['fumbles', 'interceptions', 'sacks']
