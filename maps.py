@@ -30,3 +30,18 @@ town_to_team = {'Arizona': 'Arizona Cardinals',
                 'Tampa Bay': 'Tampa Bay Buccaneers',
                 'Tennessee': 'Tennessee Titans',
                 'Washington': 'Washington Redskins'}
+
+tr_stat_list = {'sacks_defense_list': {'url': 'https://www.teamrankings.com/nfl/stat/sacks-per-game',
+                                       'column_name': 'sacks_created'},
+                'sacks_offense_list': {'url': 'https://www.teamrankings.com/nfl/stat/qb-sacked-per-game',
+                                       'column_name': 'sacks_thrown'},
+                'interceptions_thrown': {'url': 'https://www.teamrankings.com/nfl/stat/interceptions-thrown-per-game',
+                                         'column_name': 'interceptions_thrown'},
+                'interceptions_created': {'url': 'https://www.teamrankings.com/nfl/stat/interceptions-per-game',
+                                          'column_name': 'interceptions_created'},
+                'fumbles_thrown': {'url': 'https://www.teamrankings.com/nfl/stat/fumbles-per-game',
+                                   'column_name': 'fumbles_thrown'},
+                'fumbles_created': {'url': 'https://www.teamrankings.com/nfl/stat/opponent-fumbles-per-game',
+                                    'column_name': 'fumbles_created'},
+                'defensive_touchdowns': {'url': 'https://www.teamrankings.com/nfl/stat/defensive-touchdowns-per-game',
+                                         'column_name': 'defensive_touchdowns'}}

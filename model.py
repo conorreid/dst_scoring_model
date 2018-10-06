@@ -161,38 +161,23 @@ def points_allowed_score(points: float) -> int:
 
 def main():
     spreads = get_lines()
-    sacks_defense_list = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/sacks-per-game', 'sacks_created')
-    sacks_offense_list = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/qb-sacked-per-game',
-        'sacks_thrown')
-    interceptions_thrown = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/interceptions-thrown-per-game',
-        'interceptions_thrown')
-    interceptions_created = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/interceptions-per-game',
-        'interceptions_created')
-    fumbles_thrown = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/fumbles-per-game',
-        'fumbles_thrown')
-    fumbles_created = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/opponent-fumbles-per-game',
-        'fumbles_created')
-    defensive_touchdowns = get_tr_stats_full(
-        'https://www.teamrankings.com/nfl/stat/defensive-touchdowns-per-game',
-        'defensive_touchdowns')
-
-    defense_pure_df = pd.merge(spreads, sacks_defense_list,
+    tr_items = {}
+    for key, value in maps.tr_stat_list.items():
+        tr_items[key] = get_tr_stats_full(value['url'], value['column_name'])
+    defense_pure_df = pd.merge(spreads, tr_items['sacks_defense_list'],
                                how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, interceptions_created,
+    defense_pure_df = pd.merge(defense_pure_df, 
+                               tr_items['interceptions_created'],
                                how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, fumbles_created,
+    defense_pure_df = pd.merge(defense_pure_df, tr_items['fumbles_created'],
                                how='left', on='team_name')
-    defense_pure_df = pd.merge(defense_pure_df, defensive_touchdowns,
+    defense_pure_df = pd.merge(defense_pure_df, 
+                               tr_items['defensive_touchdowns'],
                                how='left', on='team_name')
-    opponent_pure_df = pd.merge(sacks_offense_list, interceptions_thrown,
+    opponent_pure_df = pd.merge(tr_items['sacks_offense_list'],
+                                tr_items['interceptions_thrown'],
                                 how='left', on='team_name')
-    opponent_pure_df = pd.merge(opponent_pure_df, fumbles_thrown,
+    opponent_pure_df = pd.merge(opponent_pure_df, tr_items['fumbles_thrown'],
                                 how='left', on='team_name')
     fused_df = pd.merge(defense_pure_df, opponent_pure_df, how='left',
                         left_on='opponent', right_on='team_name')
