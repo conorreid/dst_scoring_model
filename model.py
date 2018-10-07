@@ -52,8 +52,9 @@ def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
     """
     df1 = get_tr_stats(url, stat_name + '2018')
     df2 = get_tr_stats(url + '?date=2018-02-05', stat_name + '2017')
-    df_merge = pd.merge(df1, df2, how='left', on='team_name')
-    df_merge[stat_name] = df_merge[stat_name + '2017_season'] * 0.5 + \
+    df_merge = pd.merge(df1, df2, how='left',
+                        on='team_name', suffixes=('', '_x'))
+    df_merge[stat_name] = df_merge[stat_name + '2018_season'] * 0.5 + \
         df_merge[stat_name + '2018_last_3'] * 0.5
     df_merge = df_merge[['team_name', stat_name]]
     return df_merge

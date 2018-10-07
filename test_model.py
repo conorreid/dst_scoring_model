@@ -41,3 +41,11 @@ def test_get_lines(get, loads):
 def test_construct_tr_df():
     tr_list = [{'team_name': 'Arizona'}]
     assert model.construct_tr_df(tr_list)['team_name'][0] == 'Arizona Cardinals'
+
+
+@mock.patch('model.get_tr_stats',
+            return_value=pd.DataFrame(data={'team_name': ['hello'],
+                                            'stat2018_season': [1],
+                                            'stat2018_last_3': [1]}))
+def test_get_tr_stats_full(get_tr_stats):
+    assert model.get_tr_stats_full('hello', 'stat')['team_name'][0] == 'hello'
