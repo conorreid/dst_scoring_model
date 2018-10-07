@@ -19,7 +19,8 @@ def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
     Returns:
         tr_df (pandas.Dataframe): dataframe of specified stat per team
     """
-    logging.info('getting teamrankings stats for ' + stat_name)
+    logging.info('getting teamrankings stats for ' +
+                 stat_name + ' for url ' + url)
     queried_stat = requests.get(url)
     queried_stat_html = BeautifulSoup(queried_stat.text, 'html.parser')
     table = queried_stat_html.find('table',

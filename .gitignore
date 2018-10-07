@@ -7,3 +7,4 @@ __pycache__/
 .vscode/launch.json
 test.html
 .pytest_cache/v/cache/lastfailed
+*.log
