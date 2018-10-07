@@ -6,3 +6,4 @@ __pycache__/
 .pytest_cache/README.md
 .vscode/launch.json
 test.html
+.pytest_cache/v/cache/lastfailed
