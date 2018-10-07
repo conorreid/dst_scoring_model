@@ -7,6 +7,7 @@ import dst_scoring_model.clean_data as clean_data
 import dst_scoring_model.get_pinnacle_data as get_pinnacle_data
 import dst_scoring_model.get_tr_data as get_tr_data
 import dst_scoring_model.model as model
+import dst_scoring_model.get_qb_data as get_qb_data
 
 
 def main():
@@ -28,8 +29,13 @@ def main():
                                    how='left', on='team_name')
 
     logging.info('merging items together for opponent_pure_df')
+    qb_interceptions = get_qb_data.get_footballdb_data()
+    int_fusion = pd.merge(tr_items['interceptions_thrown'],
+                          qb_interceptions, how='left')
+    int_fusion['interceptions_thrown'] = int_fusion.apply(
+        lambda row: clean_data.interceptions_merge(row), axis=1)
     opponent_pure_df = pd.merge(tr_items['sacks_offense_list'],
-                                tr_items['interceptions_thrown'],
+                                int_fusion,
                                 how='left', on='team_name')
     opponent_pure_df = pd.merge(opponent_pure_df, tr_items['fumbles_thrown'],
                                 how='left', on='team_name')
