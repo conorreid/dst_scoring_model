@@ -5,3 +5,4 @@ __pycache__/
 .pytest_cache/v/cache/nodeids
 .pytest_cache/README.md
 .vscode/launch.json
+test.html

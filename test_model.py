@@ -10,6 +10,47 @@ def construct_request_content():
     return response
 
 
+def construct_request_content_tr():
+    response = mock.MagicMock()
+    response.text = """<html>
+    <body>
+        <main>
+            <table class="tr-table datatable scrollable">
+                <thead>
+                    <tr>
+                        <th class="text-center sort-asc-first sort-first">Rank</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rank text-center" data-sort="1">1</td>
+                        <td class="text-left nowrap" data-sort="LA Rams"><a href="https://www.teamrankings.com/nfl/team/los-angeles-rams">LA
+                                Rams</a></td>
+                        <td class="text-right" data-sort="0.411765">0.4</td>
+                        <td class="text-right" data-sort="0">0.0</td>
+                        <td class="text-right" data-sort="0">0.0</td>
+                        <td class="text-right" data-sort="0.5">0.5</td>
+                        <td class="text-right" data-sort="0.333333">0.3</td>
+                        <td class="text-right" data-sort="1.25">1.2</td>
+                    </tr>
+                    <tr>
+                        <td class="rank text-center" data-sort="1">1</td>
+                        <td class="text-left nowrap" data-sort="LA Rams"><a href="https://www.teamrankings.com/nfl/team/los-angeles-rams">LA
+                                Rams</a></td>
+                        <td class="text-right" data-sort="0.411765">0.4</td>
+                        <td class="text-right" data-sort="0">0.0</td>
+                        <td class="text-right" data-sort="0">0.0</td>
+                        <td class="text-right" data-sort="0.5">0.5</td>
+                        <td class="text-right" data-sort="0.333333">0.3</td>
+                        <td class="text-right" data-sort="1.25">1.2</td>
+                    </tr>
+                </tbody>
+        </main>>
+    </body>
+    </html>"""
+    return response
+
+
 @pytest.mark.parametrize("test_input, expect", [(0, 10), (6, 7), (13, 4),
                                                 (17, 1), (27, 0), (34, -3),
                                                 (36, -4)])
@@ -32,7 +73,7 @@ def test_defense_opponent_fusion():
             return_value={'events': [
                 {'teams': [
                     {'name': 'hello'}, {'name': 'goodbye'}],
-                 'lines': {'3': {'spread': {'point_spread_home': 1}, 
+                 'lines': {'3': {'spread': {'point_spread_home': 1},
                                  'total': {'total_under': 1}}}}]})
 def test_get_lines(get, loads):
     assert model.get_lines()['team_name'][0] == 'hello'
@@ -49,3 +90,9 @@ def test_construct_tr_df():
                                             'stat2018_last_3': [1]}))
 def test_get_tr_stats_full(get_tr_stats):
     assert model.get_tr_stats_full('hello', 'stat')['team_name'][0] == 'hello'
+
+
+@mock.patch('requests.get', return_value=construct_request_content_tr())
+def test_get_tr_stats(get):
+    assert model.get_tr_stats('test', 'hello')['hello_season'][0] == 0.4
+
