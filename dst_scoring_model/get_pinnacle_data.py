@@ -27,4 +27,5 @@ def get_lines() -> pd.DataFrame:
                              event['lines']['3']['spread']['point_spread_home'],
                              'opponent': event['teams'][0]['name']}])
     spread_df = pd.DataFrame(data=spread_list)
+    spread_df['points_allowed'].fillna(27, inplace=True)
     return spread_df
