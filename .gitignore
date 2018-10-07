@@ -1,7 +1,8 @@
 .~lock.df_final.csv#
 df_final.csv
-__pycache__/maps.cpython-35.pyc
+__pycache__/
 .vscode/settings.json
 .pytest_cache/v/cache/nodeids
 .pytest_cache/README.md
 .vscode/launch.json
+test.html
