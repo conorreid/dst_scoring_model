@@ -36,3 +36,8 @@ def test_defense_opponent_fusion():
                                  'total': {'total_under': 1}}}}]})
 def test_get_lines(get, loads):
     assert model.get_lines()['team_name'][0] == 'hello'
+
+
+def test_construct_tr_df():
+    tr_list = [{'team_name': 'Arizona'}]
+    assert model.construct_tr_df(tr_list)['team_name'][0] == 'Arizona Cardinals'

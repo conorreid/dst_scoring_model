@@ -37,7 +37,7 @@ def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
             queried_stat_list.append({'team_name': tds[1].text,
                                       stat_name + '_season': np.nan,
                                       stat_name + '_last_3': np.nan})
-    return construct_tr_df(queried_stat_list, stat_name)
+    return construct_tr_df(queried_stat_list)
 
 
 def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
@@ -59,14 +59,13 @@ def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
     return df_merge
 
 
-def construct_tr_df(tr_list: list, stat_name: str) -> pd.DataFrame:
+def construct_tr_df(tr_list: list) -> pd.DataFrame:
     """Takes in the list of dictionaries, converts to a dataframe, and then
     maps town_to_team dict as well as computes average of last season and last
     3 games score.
 
     Args:
         tr_list (list): list of dictionaries from tr_stats()
-        stat_name (string): name of stat being queried to make columns
     Returns:
         tr_df (pandas.Dataframe): dataframe of specified stat per team
     """
