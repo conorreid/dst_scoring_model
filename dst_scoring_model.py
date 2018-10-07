@@ -2,15 +2,20 @@ import logging
 
 import pandas as pd
 
-import maps
+import dst_scoring_model.maps as maps
+import dst_scoring_model.clean_data as clean_data
+import dst_scoring_model.get_pinnacle_data as get_pinnacle_data
+import dst_scoring_model.get_tr_data as get_tr_data
+import dst_scoring_model.model as model
 
 
 def main():
-    spreads = get_lines()
+    spreads = get_pinnacle_data.get_lines()
     tr_items = {}
     defense_pure_df = pd.DataFrame()
     for key, value in maps.tr_stat_list.items():
-        tr_items[key] = get_tr_stats_full(value['url'], value['column_name'])
+        tr_items[key] = get_tr_data.get_tr_stats_full(
+            value['url'], value['column_name'])
 
     defense_pure_df = (pd.merge(spreads, tr_items['sacks_defense_list'],
                        how='left', on='team_name'))
@@ -30,14 +35,14 @@ def main():
                         left_on='opponent', right_on='team_name')
 
     for key, value in maps.poisson_events.items():
-        fused_df[key] = fused_df[key].apply(lambda row: poisson_create(row, 
-                                                                       value))
+        fused_df[key] = fused_df[key].apply(
+            lambda row: model.poisson_create(row, value))
     
     for item in maps.defense_opponent_list:
-        fused_df = defense_opponent_fusion(fused_df, item)
+        fused_df = clean_data.defense_opponent_fusion(fused_df, item)
 
     fused_df['points_allowed_score'] = fused_df['points_allowed'].apply(
-        lambda row: points_allowed_score(row))
+        lambda row: model.points_allowed_score(row))
     logging.info('creating final score output')
     fused_df['final'] = fused_df['points_allowed_score'] + \
         fused_df['interceptions'] * 2 + fused_df['sacks'] * 1 + \

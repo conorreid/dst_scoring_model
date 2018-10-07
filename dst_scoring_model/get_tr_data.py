@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import requests
 
+import dst_scoring_model.maps as maps
+
 
 def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
     """Calls out to the URL specified at teamrankings.com, finds the table using
