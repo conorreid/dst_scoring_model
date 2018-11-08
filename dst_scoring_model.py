@@ -67,7 +67,7 @@ def main():
                          'fumbles', 'sacks', 'defensive_touchdowns']]
     fused_df.sort_values(by='final', ascending=False, inplace=True)
     logging.info('creating csv')
-    fused_df.to_csv('/home/conor/Documents/dst_scoring_model/df_final.csv',
+    fused_df.to_csv('df_final.csv',
                     index=False)
 
 
