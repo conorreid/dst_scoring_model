@@ -24,7 +24,7 @@ def main():
                        how='left', on='team_name'))
 
     for item in maps.defense_pure_list:
-        defense_pure_df = pd.merge(defense_pure_df, 
+        defense_pure_df = pd.merge(defense_pure_df,
                                    tr_items[item],
                                    how='left', on='team_name')
 
@@ -48,7 +48,7 @@ def main():
         logging.info('getting poisson event probablity for ' + key)
         fused_df[key] = fused_df[key].apply(
             lambda row: model.poisson_create(row, value))
-    
+
     for item in maps.defense_opponent_list:
         fused_df = clean_data.defense_opponent_fusion(fused_df, item)
 
@@ -67,7 +67,7 @@ def main():
                          'fumbles', 'sacks', 'defensive_touchdowns']]
     fused_df.sort_values(by='final', ascending=False, inplace=True)
     logging.info('creating csv')
-    fused_df.to_csv('/home/conor/Documents/dst_scoring_model/df_final.csv',
+    fused_df.to_csv('df_final.csv',
                     index=False)
 
 
