@@ -54,8 +54,8 @@ def test_construct_tr_df():
 
 @mock.patch('dst_scoring_model.get_tr_data.get_tr_stats',
             return_value=pd.DataFrame(data={'team_name': ['hello'],
-                                            'stat2018_season': [1],
-                                            'stat2018_last_3': [1]}))
+                                            'stat2019_season': [1],
+                                            'stat2019_last_3': [1]}))
 def test_get_tr_stats_full(get_tr_stats):
     assert get_tr_data.get_tr_stats_full(
         'hello', 'stat')['team_name'][0] == 'hello'
