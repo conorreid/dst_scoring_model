@@ -47,21 +47,20 @@ def construct_request_content_tr():
 
 
 def test_construct_tr_df():
-    tr_list = [{'team_name': 'Arizona'}]
-    assert get_tr_data.construct_tr_df(
-        tr_list)['team_name'][0] == 'Arizona Cardinals'
+    tr_list = [{"team_name": "Arizona"}]
+    assert get_tr_data.construct_tr_df(tr_list)["team_name"][0] == "Arizona Cardinals"
 
 
-@mock.patch('dst_scoring_model.get_tr_data.get_tr_stats',
-            return_value=pd.DataFrame(data={'team_name': ['hello'],
-                                            'stat2019_season': [1],
-                                            'stat2019_last_3': [1]}))
+@mock.patch(
+    "dst_scoring_model.get_tr_data.get_tr_stats",
+    return_value=pd.DataFrame(
+        data={"team_name": ["hello"], "stat2019_season": [1], "stat2019_last_3": [1]}
+    ),
+)
 def test_get_tr_stats_full(get_tr_stats):
-    assert get_tr_data.get_tr_stats_full(
-        'hello', 'stat')['team_name'][0] == 'hello'
+    assert get_tr_data.get_tr_stats_full("hello", "stat")["team_name"][0] == "hello"
 
 
-@mock.patch('requests.get', return_value=construct_request_content_tr())
+@mock.patch("requests.get", return_value=construct_request_content_tr())
 def test_get_tr_stats(get):
-    assert get_tr_data.get_tr_stats(
-        'test', 'hello')['hello_season'][0] == 0.4
+    assert get_tr_data.get_tr_stats("test", "hello")["hello_season"][0] == 0.4
