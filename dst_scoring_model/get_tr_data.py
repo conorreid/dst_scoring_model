@@ -1,11 +1,10 @@
 import logging
 
-from bs4 import BeautifulSoup
+import dst_scoring_model.maps as maps
 import numpy as np
 import pandas as pd
 import requests
-
-import dst_scoring_model.maps as maps
+from bs4 import BeautifulSoup
 
 
 def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
@@ -46,7 +45,7 @@ def get_tr_stats(url: str, stat_name: str) -> pd.DataFrame:
 
 
 def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
-    """Calls out to URL for both 2018 and 2019 stats, fuses dfs, and returns
+    """Calls out to URL for both 2019 and 2020 stats, fuses dfs, and returns
     a dataframe.
 
     Args:
@@ -56,11 +55,11 @@ def get_tr_stats_full(url: str, stat_name: str) -> pd.DataFrame:
         tr_df (pandas.Dataframe): dataframe of specified stat per team
     """
     df1 = get_tr_stats(url, stat_name + "2019")
-    df2 = get_tr_stats(url + "?date=2019-02-05", stat_name + "2018")
+    df2 = get_tr_stats(url + "?date=2020-09-05", stat_name + "2020")
     df_merge = pd.merge(df1, df2, how="left", on="team_name", suffixes=("", "_x"))
     df_merge[stat_name] = (
-        df_merge[stat_name + "2018_season"] * 0.7
-        + df_merge[stat_name + "2019_last_3"] * 0.3
+        df_merge[stat_name + "2019_season"] * 0.7
+        + df_merge[stat_name + "2020_last_3"] * 0.3
     )
     df_merge = df_merge[["team_name", stat_name]]
     return df_merge
