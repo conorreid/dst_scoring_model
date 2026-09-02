@@ -1,0 +1,7 @@
+{
+  "w_sacks": 0.35,
+  "w_ints": 0.5,
+  "w_fumbles": 1.0,
+  "game_script_k": 0.005,
+  "fumble_recovery_rate": 0.35
+}

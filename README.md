@@ -1,36 +1,46 @@
 # D/ST scoring model
 
-Fantasy football D/ST streaming model, loosely based on the framework from
-quickonthedrawl on r/fantasyfootball
-(https://www.reddit.com/r/fantasyfootball/comments/9cv5of/building_and_improving_on_existing_dst_projections/).
+Fantasy football D/ST streaming model: Vegas-implied points allowed plus
+Poisson-expected defensive events, with parameters fitted by backtest.
 
 ## Methodology
 For each defense with a game this week:
-- **Points allowed** comes from Vegas lines (ESPN scoreboard API / DraftKings):
-  the opponent's implied total from the spread and over/under. The fantasy
-  points-allowed score is the *expectation of the bracket score over a Poisson
-  distribution* around that implied total, not the bracket of the mean.
-- **Sacks, interceptions, fumbles, defensive TDs** are Poisson-expected counts
-  from per-game rates (teamrankings.com), fusing what the defense creates
-  (45%) with what the opponent gives up (55%).
-- Rates blend the **previous season** (via dated teamrankings tables) with the
-  **current season** (half season-to-date, half last-3-games), ramping from
-  all-prior in week 1 to all-current by week 11.
-- Scoring is configurable per league (`model.Scoring`,
-  `model.scoring_from_sleeper`).
+- **Points allowed**: the opponent's implied total from the spread and
+  over/under (ESPN scoreboard API live; nflverse closing lines in backtests).
+  The fantasy PA score is the expectation of the bracket score over a Poisson
+  distribution around the implied total.
+- **Sacks & interceptions**: fusion of the defense's own rate and the
+  opponent's giveaway rate (weights fitted by backtest — the opponent's
+  sack-proneness matters more than the defense's rate), scaled by a fitted
+  game-script factor (favored defenses face more dropbacks).
+- **Fumbles**: forced-fumble rate times a fitted league recovery rate —
+  recovering fumbles is luck; forcing them is skill.
+- **Touchdowns**: defensive + special-teams return TD rates.
+- Rates come from nflverse weekly team stats, blending last season with the
+  current one (half season-to-date, half last-3), ramping over 10 weeks.
+- Scoring configurable per league (`model.Scoring`, `scoring_from_sleeper`).
+
+## Backtest
+`python -m dst_scoring_model.backtest --seasons 2023 2024 2025 [--fit]`
+builds a leak-free dataset (rates as of each week, closing lines, realized
+stats) and reports weekly Spearman, MAE, and the top-5 streaming edge.
+`--fit` grid-fits the fusion weights, game-script coefficient, and fumble
+recovery rate, writing `fitted_params.json` (shipped with the package).
+
+2023-25 (1,632 team-weeks): Spearman .272 -> .292, MAE 4.37 -> 4.23,
+top-5 edge +2.09 -> +2.36 pts/week vs the fitted parameters.
 
 ## Usage
 ```
 pip install -e .
-python dst_scoring_model.py --week 1 --season 2026        # print rankings
-python dst_scoring_model.py --csv                          # current week + csv
+python dst_scoring_model.py --week 1 --season 2026
 ```
 ```python
 from dst_scoring_model import run, Scoring
-df = run(week=1, season=2026)   # expected events + standard 'final' score
+df = run(week=1, season=2026)
 ```
 
 ## Sources
-- ESPN scoreboard API for betting lines (replaces the defunct
-  therundown.io/Pinnacle source)
-- teamrankings.com for team stat rates
+- ESPN scoreboard API (DraftKings) for live betting lines
+- nflverse (stats_team_week, games.csv) for stat rates, historical lines,
+  and backtest actuals
