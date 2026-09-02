@@ -44,7 +44,9 @@ def get_lines(week: int | None = None, season: int | None = None) -> pd.DataFram
         else:
             home_pts = away_pts = 22.0
         rows.append({"team_name": teams["home"], "opponent": teams["away"],
-                     "points_allowed": away_pts, "points_for": home_pts})
+                     "points_allowed": away_pts, "points_for": home_pts,
+                     "is_home": 1})
         rows.append({"team_name": teams["away"], "opponent": teams["home"],
-                     "points_allowed": home_pts, "points_for": away_pts})
+                     "points_allowed": home_pts, "points_for": away_pts,
+                     "is_home": 0})
     return pd.DataFrame(data=rows)

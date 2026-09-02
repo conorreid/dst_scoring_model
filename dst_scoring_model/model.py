@@ -30,16 +30,54 @@ class ModelParams:
     w_fumbles: float = 0.45
     game_script_k: float = 0.0   # pass-pressure multiplier per implied point of margin
     fumble_recovery_rate: float = 0.5
+    home_boost: float = 1.0      # pass-pressure multiplier for home defenses
+    td_conversion: float | None = None  # def TDs per expected turnover (None: raw rates)
+    td_points_share: float | None = None  # share of PA from TDs (None: plain Poisson)
+
+    _fitted_cache = None
 
     @classmethod
     def fitted(cls) -> "ModelParams":
-        try:
-            return cls(**json.load(open(PARAMS_FILE)))
-        except Exception:
-            return cls()
+        if cls._fitted_cache is None:
+            try:
+                cls._fitted_cache = cls(**json.load(open(PARAMS_FILE)))
+            except Exception:
+                cls._fitted_cache = cls()
+        return cls._fitted_cache
 
     def save(self):
         json.dump(asdict(self), open(PARAMS_FILE, "w"), indent=2)
+        type(self)._fitted_cache = None
+
+
+_pa_pmf_memo = {}
+
+
+def pa_pmf(implied: float, td_share: float | None,
+           max_points: int = 80) -> np.ndarray:
+    """Distribution of points allowed around the Vegas-implied mean.
+
+    With td_share set, points are modeled as 7 * Poisson(TDs) +
+    3 * Poisson(FGs) — the lumpy 7s-and-3s shape real scores follow, which
+    matters because the fantasy brackets sit on those boundaries. With
+    td_share None, a plain Poisson on points (the original naive model).
+    """
+    key = (round(implied * 4) / 4, td_share)
+    if key in _pa_pmf_memo:
+        return _pa_pmf_memo[key]
+    if td_share is None:
+        pmf = stats.poisson.pmf(np.arange(max_points), implied)
+    else:
+        p_td = stats.poisson.pmf(np.arange(12), implied * td_share / 7)
+        p_fg = stats.poisson.pmf(np.arange(16), implied * (1 - td_share) / 3)
+        pmf = np.zeros(max_points)
+        for i, pt in enumerate(p_td):
+            for j, pf in enumerate(p_fg):
+                pts = 7 * i + 3 * j
+                if pts < max_points:
+                    pmf[pts] += pt * pf
+    _pa_pmf_memo[key] = pmf
+    return pmf
 
 
 def predict(rate_df: pd.DataFrame, lines_df: pd.DataFrame,
@@ -63,8 +101,11 @@ def predict(rate_df: pd.DataFrame, lines_df: pd.DataFrame,
         d = rate_df.loc[line.team]      # this defense's own rates
         o = rate_df.loc[line.opponent]  # opponent giveaway rates
         # game script: a favored defense faces more dropbacks — scale the
-        # pass-pressure events (sacks, interceptions) by implied margin
+        # pass-pressure events (sacks, interceptions) by implied margin;
+        # home defenses get an additional fitted pressure boost
         script = float(np.clip(1 + p.game_script_k * line.margin, 0.75, 1.25))
+        if getattr(line, "is_home", 0):
+            script *= p.home_boost
         sacks = (p.w_sacks * d["def_sacks"]
                  + (1 - p.w_sacks) * o["sacks_suffered"]) * script
         ints = (p.w_ints * d["def_interceptions"]
@@ -75,7 +116,13 @@ def predict(rate_df: pd.DataFrame, lines_df: pd.DataFrame,
         fumble_events = (p.w_fumbles * d["def_fumbles_forced"]
                          + (1 - p.w_fumbles) * o["off_fumbles"])
         fumbles = fumble_events * p.fumble_recovery_rate
-        tds = d["def_tds"] + d["special_teams_tds"]
+        # defensive TDs from expected turnovers x a fitted conversion rate
+        # (raw TD-rate averages are the noisiest stat in the model);
+        # special-teams return TDs keep their own rate
+        if p.td_conversion is not None:
+            tds = p.td_conversion * (ints + fumbles) + d["special_teams_tds"]
+        else:
+            tds = d["def_tds"] + d["special_teams_tds"]
         rows.append({
             "team": line.team, "opponent": line.opponent,
             "points_allowed": line.points_allowed,
@@ -108,15 +155,20 @@ class Scoring:
                 return score
         return self.pa_brackets[-1][1]
 
-    def expected_pa_score(self, implied_points: float, max_points: int = 60) -> float:
-        """E[bracket score] over a Poisson distribution of points allowed.
+    def expected_pa_score(self, implied_points: float,
+                          td_share: float | str = "fitted") -> float:
+        """E[bracket score] over the points-allowed distribution.
 
         The brackets are nonlinear, so scoring the mean understates variance
         effects; the expectation over the full distribution is correct.
+        td_share picks the distribution shape (see pa_pmf); the default uses
+        the backtest-fitted value.
         """
-        ks = np.arange(0, max_points)
-        pmf = stats.poisson.pmf(ks, implied_points)
-        scores = np.array([self.points_allowed_score(k) for k in ks])
+        if td_share == "fitted":
+            td_share = ModelParams.fitted().td_points_share
+        pmf = pa_pmf(implied_points, td_share)
+        scores = np.array([self.points_allowed_score(k)
+                           for k in range(len(pmf))])
         return float((pmf * scores).sum())
 
     def score(self, row) -> float:

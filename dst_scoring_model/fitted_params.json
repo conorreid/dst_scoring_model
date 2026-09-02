@@ -1,7 +1,10 @@
 {
   "w_sacks": 0.35,
-  "w_ints": 0.5,
-  "w_fumbles": 1.0,
+  "w_ints": 0.55,
+  "w_fumbles": 0.45,
   "game_script_k": 0.005,
-  "fumble_recovery_rate": 0.35
+  "fumble_recovery_rate": 0.55,
+  "home_boost": 1.0,
+  "td_conversion": 0.05,
+  "td_points_share": null
 }

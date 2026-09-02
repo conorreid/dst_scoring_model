@@ -31,9 +31,11 @@ def week_lines(games_df: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
         spread = gm.spread_line if pd.notna(gm.spread_line) else 0.0
         home_pts, away_pts = (total + spread) / 2, (total - spread) / 2
         rows.append({"team": gm.home_team, "opponent": gm.away_team,
-                     "points_allowed": away_pts, "margin": home_pts - away_pts})
+                     "points_allowed": away_pts, "margin": home_pts - away_pts,
+                     "is_home": 1})
         rows.append({"team": gm.away_team, "opponent": gm.home_team,
-                     "points_allowed": home_pts, "margin": away_pts - home_pts})
+                     "points_allowed": home_pts, "margin": away_pts - home_pts,
+                     "is_home": 0})
     return pd.DataFrame(data=rows)
 
 
@@ -83,6 +85,7 @@ def build_dataset(seasons: list[int]) -> pd.DataFrame:
                                           o["passing_interceptions"].values)
             df["d_ff"], df["o_fum"] = d["def_fumbles_forced"].values, o["off_fumbles"].values
             df["d_tds"] = (d["def_tds"] + d["special_teams_tds"]).values
+            df["d_st"] = d["special_teams_tds"].values
             df["season"], df["week"] = season, week
             frames.append(df.merge(act[act["week"] == week], on=["week", "team"]))
     return pd.concat(frames, ignore_index=True)
@@ -91,14 +94,20 @@ def build_dataset(seasons: list[int]) -> pd.DataFrame:
 def predictions(ds: pd.DataFrame, p: model.ModelParams) -> pd.DataFrame:
     """Vectorized event predictions (untruncated Poisson means)."""
     out = ds.copy()
-    script = np.clip(1 + p.game_script_k * ds["margin"], 0.75, 1.25)
+    script = (np.clip(1 + p.game_script_k * ds["margin"], 0.75, 1.25)
+              * np.where(ds["is_home"] == 1, p.home_boost, 1.0))
     out["sacks"] = (p.w_sacks * ds["d_sacks"]
                     + (1 - p.w_sacks) * ds["o_sacks"]) * script
     out["interceptions"] = (p.w_ints * ds["d_ints"]
                             + (1 - p.w_ints) * ds["o_ints"]) * script
     out["fumbles"] = (p.w_fumbles * ds["d_ff"]
                       + (1 - p.w_fumbles) * ds["o_fum"]) * p.fumble_recovery_rate
-    out["defensive_touchdowns"] = ds["d_tds"]
+    if p.td_conversion is not None:
+        out["defensive_touchdowns"] = (p.td_conversion
+                                       * (out["interceptions"] + out["fumbles"])
+                                       + ds["d_st"])
+    else:
+        out["defensive_touchdowns"] = ds["d_tds"]
     return out
 
 
@@ -111,7 +120,8 @@ def evaluate(ds: pd.DataFrame, p: model.ModelParams) -> dict:
     def pa_score(x):
         key = round(x * 4) / 4
         if key not in pa_memo:
-            pa_memo[key] = scoring.expected_pa_score(key)
+            pa_memo[key] = scoring.expected_pa_score(
+                key, td_share=p.td_points_share)
         return pa_memo[key]
 
     pred["pred"] = (pred["points_allowed"].map(pa_score)
@@ -137,7 +147,10 @@ def fit(ds: pd.DataFrame) -> model.ModelParams:
     grid = np.round(np.arange(0, 1.01, 0.05), 2)
 
     def event_mae(pred_col, actual_col):
-        return float((pred_col - ds[actual_col]).abs().mean())
+        # squared error: fits the conditional mean, which is what EV
+        # prediction needs (absolute error targets the median and biases
+        # rare-event predictions toward zero)
+        return float(((pred_col - ds[actual_col]) ** 2).mean())
 
     w_sacks = min(grid, key=lambda w: event_mae(
         w * ds["d_sacks"] + (1 - w) * ds["o_sacks"], "act_sacks"))
@@ -148,18 +161,49 @@ def fit(ds: pd.DataFrame) -> model.ModelParams:
         key=lambda wr: event_mae(
             (wr[0] * ds["d_ff"] + (1 - wr[0]) * ds["o_fum"]) * wr[1],
             "act_fumbles"))
-    # game script on the pass-pressure events with weights fixed
-    def script_mae(k):
-        s = np.clip(1 + k * ds["margin"], 0.75, 1.25)
+    # game-script k and home boost fit jointly on pass-pressure MAE
+    def script_home_mae(kh):
+        k, h = kh
+        s = (np.clip(1 + k * ds["margin"], 0.75, 1.25)
+             * np.where(ds["is_home"] == 1, h, 1.0))
         sacks = (w_sacks * ds["d_sacks"] + (1 - w_sacks) * ds["o_sacks"]) * s
         ints = (w_ints * ds["d_ints"] + (1 - w_ints) * ds["o_ints"]) * s
         return event_mae(sacks, "act_sacks") + event_mae(ints, "act_ints")
 
-    k = min(np.round(np.arange(0, 0.061, 0.005), 3), key=script_mae)
-    return model.ModelParams(w_sacks=float(w_sacks), w_ints=float(w_ints),
-                             w_fumbles=float(best_fum[0]),
-                             game_script_k=float(k),
-                             fumble_recovery_rate=float(round(best_fum[1], 2)))
+    k, h = min(((k, h) for k in np.round(np.arange(0, 0.061, 0.005), 3)
+                for h in np.round(np.arange(1.0, 1.13, 0.02), 2)),
+               key=script_home_mae)
+    p = model.ModelParams(w_sacks=float(w_sacks), w_ints=float(w_ints),
+                          w_fumbles=float(best_fum[0]),
+                          game_script_k=float(k), home_boost=float(h),
+                          fumble_recovery_rate=float(round(best_fum[1], 2)))
+    # defensive TDs: conversion-per-turnover vs raw rates, whichever fits
+    ev = predictions(ds, p)
+    turnovers = ev["interceptions"] + ev["fumbles"]
+    conv = min(np.round(np.arange(0, 0.201, 0.01), 2), key=lambda c: event_mae(
+        c * turnovers + ds["d_st"], "act_tds"))
+    if (event_mae(conv * turnovers + ds["d_st"], "act_tds")
+            <= event_mae(ds["d_tds"], "act_tds")):
+        p.td_conversion = float(conv)
+    # points-allowed distribution: TD/FG compound vs plain Poisson, fit on
+    # bracket-score MAE against realized bracket scores
+    scoring = model.Scoring()
+    act_bracket = ds["act_pa"].map(scoring.points_allowed_score)
+
+    def pa_mae(share):
+        memo = {}
+
+        def f(x):
+            key = round(x * 4) / 4
+            if key not in memo:
+                memo[key] = scoring.expected_pa_score(key, td_share=share)
+            return memo[key]
+        return float(((ds["points_allowed"].map(f) - act_bracket) ** 2).mean())
+
+    shares = [None] + list(np.round(np.arange(0.45, 0.81, 0.05), 2))
+    best_share = min(shares, key=pa_mae)
+    p.td_points_share = None if best_share is None else float(best_share)
+    return p
 
 
 def main():
