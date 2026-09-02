@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: dst-scoring-model
+Version: 2.0.0
+Summary: Fantasy football D/ST streaming model: Vegas-implied points allowed + Poisson event rates
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: requests>=2.31
+Requires-Dist: pandas>=2.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: scipy>=1.10
+Requires-Dist: beautifulsoup4>=4.12
+Provides-Extra: dev
+Requires-Dist: pytest>=7; extra == "dev"
+Dynamic: license-file

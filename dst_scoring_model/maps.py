@@ -30,7 +30,43 @@ town_to_team = {
     "Seattle": "Seattle Seahawks",
     "Tampa Bay": "Tampa Bay Buccaneers",
     "Tennessee": "Tennessee Titans",
-    "Washington": "Washington Redskins",
+    "Washington": "Washington Commanders",
+}
+
+# full team name -> common abbreviation, for consumers that key by code
+team_to_abbrev = {
+    "Arizona Cardinals": "ARI",
+    "Atlanta Falcons": "ATL",
+    "Baltimore Ravens": "BAL",
+    "Buffalo Bills": "BUF",
+    "Carolina Panthers": "CAR",
+    "Chicago Bears": "CHI",
+    "Cincinnati Bengals": "CIN",
+    "Cleveland Browns": "CLE",
+    "Dallas Cowboys": "DAL",
+    "Denver Broncos": "DEN",
+    "Detroit Lions": "DET",
+    "Green Bay Packers": "GB",
+    "Houston Texans": "HOU",
+    "Indianapolis Colts": "IND",
+    "Jacksonville Jaguars": "JAX",
+    "Kansas City Chiefs": "KC",
+    "Los Angeles Chargers": "LAC",
+    "Los Angeles Rams": "LAR",
+    "Miami Dolphins": "MIA",
+    "Minnesota Vikings": "MIN",
+    "New England Patriots": "NE",
+    "New Orleans Saints": "NO",
+    "New York Giants": "NYG",
+    "New York Jets": "NYJ",
+    "Las Vegas Raiders": "LV",
+    "Philadelphia Eagles": "PHI",
+    "Pittsburgh Steelers": "PIT",
+    "San Francisco 49ers": "SF",
+    "Seattle Seahawks": "SEA",
+    "Tampa Bay Buccaneers": "TB",
+    "Tennessee Titans": "TEN",
+    "Washington Commanders": "WSH",
 }
 
 tr_stat_list = {
@@ -67,7 +103,6 @@ tr_stat_list = {
 defense_pure_list = ["interceptions_created", "fumbles_created", "defensive_touchdowns"]
 
 poisson_events = {
-    "points_allowed": 50,
     "sacks_created": 7,
     "interceptions_created": 7,
     "fumbles_created": 5,
@@ -78,38 +113,3 @@ poisson_events = {
 }
 
 defense_opponent_list = ["fumbles", "interceptions", "sacks"]
-
-qb_to_team = {
-    "Kyler Murray": "Arizona Cardinals",
-    "Matt Ryan": "Atlanta Falcons",
-    "Lamar Jackson": "Baltimore Ravens",
-    "Josh Allen": "Buffalo Bills",
-    "Teddy Bridgewater": "Carolina Panthers",
-    "Mitch Trubisky": "Chicago Bears",
-    "Joe Burrow": "Cincinnati Bengals",
-    "Baker Mayfield": "Cleveland Browns",
-    "Dak Prescott": "Dallas Cowboys",
-    "Drew Lock": "Denver Broncos",
-    "Matthew Stafford": "Detroit Lions",
-    "Aaron Rodgers": "Green Bay Packers",
-    "Deshaun Watson": "Houston Texans",
-    "Phillip Rivers": "Indianapolis Colts",
-    "Gardner Minshew": "Jacksonville Jaguars",
-    "Patrick Mahomes": "Kansas City Chiefs",
-    "Tyrod Taylor": "Los Angeles Chargers",
-    "Jared Goff": "Los Angeles Rams",
-    "Ryan Fitzpatrick": "Miami Dolphins",
-    "Kirk Cousins": "Minnesota Vikings",
-    "Cam Newton": "New England Patriots",
-    "Drew Brees": "New Orleans Saints",
-    "Daniel Jones": "New York Giants",
-    "Sam Darnold": "New York Jets",
-    "Derek Carr": "Las Vegas Raiders",
-    "Carson Wentz": "Philadelphia Eagles",
-    "Ben Roethlisberger": "Pittsburgh Steelers",
-    "Jimmy Garoppolo": "San Francisco 49ers",
-    "Russell Wilson": "Seattle Seahawks",
-    "Tom Brady": "Tampa Bay Buccaneers",
-    "Ryan Tannehill": "Tennessee Titans",
-    "Dwayne Haskins": "Washington Redskins",
-}

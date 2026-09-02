@@ -8,3 +8,7 @@ __pycache__/
 test.html
 .pytest_cache/v/cache/lastfailed
 *.log
+
+.venv/
+df_final_*.csv
+dst_log.log
